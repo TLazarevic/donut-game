@@ -81,6 +81,7 @@ while running:
 
     player.update()
     player.draw(screen)
+
     pygame.display.update()
     screen.fill("gray")
 
