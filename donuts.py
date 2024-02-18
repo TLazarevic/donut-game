@@ -1,4 +1,5 @@
 import random
+import time
 from typing import Any
 import pygame
 from os import path
@@ -9,8 +10,9 @@ FIGURE_DIMENSIONS = (64, 64)
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, screen):
         pygame.sprite.Sprite.__init__(self)
+        self.screen = screen
         self.position = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
         self.velocity = (0, 0)
 
@@ -25,13 +27,13 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         if (
             self.position[0] == 1
-            or self.position[0] == screen.get_width() - FIGURE_DIMENSIONS[0]
+            or self.position[0] == self.screen.get_width() - FIGURE_DIMENSIONS[0]
         ):
             self.velocity = (-self.velocity[0], self.velocity[1])
 
         if (
             self.position[1] == 1
-            or self.position[1] == screen.get_height() - FIGURE_DIMENSIONS[1]
+            or self.position[1] == self.screen.get_height() - FIGURE_DIMENSIONS[1]
         ):
             self.velocity = (self.velocity[0], -self.velocity[1])
 
@@ -59,8 +61,9 @@ class Player(pygame.sprite.Sprite):
 class Enemy(
     pygame.sprite.Sprite,
 ):
-    def __init__(self, groups):
+    def __init__(self, screen, groups):
         super().__init__(groups)
+        self.screen = screen
         self.position = pygame.Vector2(10, 10)
         velocities = [(1, 1), (0, 1), (1, 0)]
         self.velocity = velocities[random.randint(0, 2)]
@@ -76,13 +79,13 @@ class Enemy(
     def update(self):
         if (
             self.position[0] == 1
-            or self.position[0] == screen.get_width() - FIGURE_DIMENSIONS[0]
+            or self.position[0] == self.screen.get_width() - FIGURE_DIMENSIONS[0]
         ):
             self.velocity = (-self.velocity[0], self.velocity[1])
 
         if (
             self.position[1] == 1
-            or self.position[1] == screen.get_height() - FIGURE_DIMENSIONS[1]
+            or self.position[1] == self.screen.get_height() - FIGURE_DIMENSIONS[1]
         ):
             self.velocity = (self.velocity[0], -self.velocity[1])
 
@@ -150,56 +153,67 @@ def intersects(first, second):
     )
 
 
-pygame.init()
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-screen.fill("gray")
-running = True
-
-clock = pygame.time.Clock()
-
-player = Player()
-enemy_group = EnemyGroup()
-enemy = Enemy(enemy_group)
-enemy_group.add(enemy)
-
-while running:
-    time_elapsed = pygame.time.get_ticks()
+def render_screen_text(screen, time_elapsed):
     font = pygame.font.SysFont("Arial", 18)
     score_text = font.render("Score: {}".format(time_elapsed // 1000), True, (0, 0, 0))
     commands_text = font.render("Esc to quit", True, (0, 0, 0))
     screen.blit(score_text, (10, 10))
     screen.blit(commands_text, (screen.get_width() - 95, 10))
 
-    if time_elapsed % 10000 == 0:
-        new_enemy = Enemy(enemy_group)
 
-    for enemy in enemy_group.sprites():
-        if intersects(player, enemy):
-            running = False
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                running = False
-            if event.key == pygame.K_LEFT:
-                player.move_left()
-            elif event.key == pygame.K_RIGHT:
-                player.move_right()
-            elif event.key == pygame.K_UP:
-                player.move_up()
-            elif event.key == pygame.K_DOWN:
-                player.move_down()
-
-    player.update()
-    enemy_group.update()
-    player.draw(screen)
-    enemy_group.draw(screen)
-
-    clock.tick()
-    pygame.display.update()
+def run():
+    pygame.init()
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     screen.fill("gray")
+    running = True
+
+    clock = pygame.time.Clock()
+
+    player = Player(screen)
+    enemy_group = EnemyGroup()
+    enemy = Enemy(screen, enemy_group)
+    enemy_group.add(enemy)
+
+    enemytime = time.time() + 10
+
+    while running:
+        time_elapsed = pygame.time.get_ticks()
+        render_screen_text(screen, time_elapsed)
+
+        if time.time() >= enemytime:
+            new_enemy = Enemy(screen, enemy_group)
+            enemy_group.add(new_enemy)
+            enemytime = time.time() + 10
+
+        for enemy in enemy_group.sprites():
+            if intersects(player, enemy):
+                running = False
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                if event.key == pygame.K_LEFT:
+                    player.move_left()
+                elif event.key == pygame.K_RIGHT:
+                    player.move_right()
+                elif event.key == pygame.K_UP:
+                    player.move_up()
+                elif event.key == pygame.K_DOWN:
+                    player.move_down()
+
+        player.update()
+        enemy_group.update()
+        player.draw(screen)
+        enemy_group.draw(screen)
+
+        clock.tick()
+        pygame.display.update()
+        screen.fill("gray")
+
+    pygame.quit()
 
 
-pygame.quit()
+run()
