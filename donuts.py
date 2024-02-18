@@ -151,7 +151,7 @@ def intersects(first, second):
 
 
 pygame.init()
-screen = pygame.display.set_mode((1280, 720))
+screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 screen.fill("gray")
 running = True
 
@@ -165,8 +165,10 @@ enemy_group.add(enemy)
 while running:
     time_elapsed = pygame.time.get_ticks()
     font = pygame.font.SysFont("Arial", 18)
-    text = font.render("Score: {}".format(time_elapsed // 1000), True, (0, 0, 0))
-    screen.blit(text, (0, 0))
+    score_text = font.render("Score: {}".format(time_elapsed // 1000), True, (0, 0, 0))
+    commands_text = font.render("Esc to quit", True, (0, 0, 0))
+    screen.blit(score_text, (10, 10))
+    screen.blit(commands_text, (screen.get_width() - 95, 10))
 
     if time_elapsed % 10000 == 0:
         new_enemy = Enemy(enemy_group)
@@ -179,6 +181,8 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                running = False
             if event.key == pygame.K_LEFT:
                 player.move_left()
             elif event.key == pygame.K_RIGHT:
