@@ -62,7 +62,8 @@ class Enemy(
     def __init__(self, groups):
         super().__init__(groups)
         self.position = pygame.Vector2(10, 10)
-        self.velocity = (random.randint(-1, 1), random.randint(-1, 1))
+        velocities = [(1, 1), (0, 1), (1, 0)]
+        self.velocity = velocities[random.randint(0, 2)]
 
         original_image = pygame.image.load(
             path.join(IMG_DIR, "broccoli.png")
